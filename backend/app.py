@@ -30,6 +30,7 @@ def get_students():
     # ]), 200
 
 
+
 @app.route("/students", methods=["POST"])
 def create_student():
     """
@@ -98,6 +99,7 @@ def delete_student(student_id):
         return "Failed to delete", 404
 
 
+
 @app.route("/stats")
 def get_stats():
     """
@@ -135,6 +137,7 @@ def get_stats():
         return jsonify(stats), 200
     except Exception:
         return "Calculation error", 404
+
 
 @app.route("/")
 def health():
