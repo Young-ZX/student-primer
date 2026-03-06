@@ -18,10 +18,17 @@ def get_students():
     return: Array of student objects
     """
     # TODO: replace with your implementation. This is a mock response
-    return jsonify([
-        {'course': 'COMP1531', 'id': 1, 'mark': 85, 'name': 'Alice Zhang'},
-        {'course': 'COMP1531', 'id': 2, 'mark': 72, 'name': 'Bob Smith'}
-    ]), 200
+    try:
+        data = db.get_all_students()
+        return jsonify(data),200
+    except Exception:
+        return "get_students error",404
+
+    # return jsonify([
+    #     {'course': 'COMP1531', 'id': 1, 'mark': 85, 'name': 'Alice Zhang'},
+    #     {'course': 'COMP1531', 'id': 2, 'mark': 72, 'name': 'Bob Smith'}
+    # ]), 200
+
 
 
 @app.route("/students", methods=["POST"])
@@ -37,7 +44,17 @@ def create_student():
     # Getting the request body - replace with your implementation
     student_data = request.json
 
-    pass
+    name=student_data.get('name')
+    course = student_data.get('course')
+    mark = student_data.get('mark')
+    if not name or not course:
+        return "Unmatched information", 404
+    try:
+        new_student = db.insert_student(name, course, mark)
+        return jsonify(new_student), 200
+    except Exception:
+        return "Failed to create students", 404
+    
 
 
 @app.route("/students/<int:student_id>", methods=["PUT"])
@@ -49,8 +66,22 @@ def update_student(student_id):
     param mark: The mark the student received (from request body)
     return: The updated student if successful
     """
-    pass  # replace with your implementation
-
+    student_data = request.json
+    
+    try:
+        updated = db.update_student(
+            student_id, 
+            name=student_data.get('name'), 
+            course=student_data.get('course'), 
+            mark=student_data.get('mark')
+        )
+        
+        if updated:
+            return jsonify(updated), 200
+        else:
+            return "StudentID not found", 404
+    except Exception:
+        return "Failed to update", 404
 
 @app.route("/students/<int:student_id>", methods=["DELETE"])
 def delete_student(student_id):
@@ -58,7 +89,15 @@ def delete_student(student_id):
     Route to delete student by id
     return: The deleted student
     """
-    pass  # replace with your implementation
+    try:
+        result = db.delete_student(student_id)
+        if result:
+            return jsonify(result), 200
+        else:
+            return "StudentID not found", 404
+    except Exception:
+        return "Failed to delete", 404
+
 
 
 @app.route("/stats")
@@ -67,7 +106,37 @@ def get_stats():
     Route to show the stats of all student marks 
     return: An object with the stats (count, average, min, max)
     """
-    pass  # replace with your implementation
+    try:
+        students = db.get_all_students()
+        
+        # If no students, return zeros
+        if not students:
+            return jsonify({
+                "count": 0, 
+                "average": 0, 
+                "min": 0, 
+                "max": 0
+            }), 200
+            
+        valid_marks = [s['mark'] for s in students if s['mark'] is not None]
+        
+        if len(valid_marks) == 0:
+            return jsonify({
+                "count": len(students),
+                "average": 0,
+                "min": 0,
+                "max": 0
+            }), 200
+        
+        stats = {
+            "count": len(valid_marks),
+            "average": round(sum(valid_marks) / len(valid_marks), 2),
+            "min": min(valid_marks),
+            "max": max(valid_marks)
+        }
+        return jsonify(stats), 200
+    except Exception:
+        return "Calculation error", 404
 
 
 @app.route("/")
