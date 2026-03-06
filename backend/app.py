@@ -46,12 +46,12 @@ def create_student():
 
     name=student_data.get('name')
     course = student_data.get('course')
-    mark = student_data.get('mark',0)
+    mark = student_data.get('mark')
     if not name or not course:
         return "Unmatched information", 404
     try:
         new_student = db.insert_student(name, course, mark)
-        return jsonify(new_student, 200)
+        return jsonify(new_student), 200
     except Exception:
         return "Failed to create students", 404
     
@@ -129,10 +129,10 @@ def get_stats():
             }), 200
         
         stats = {
-            "count": len(students),
-            "average": sum(valid_marks) / len(valid_marks) if valid_marks else 0,
-            "min": min(valid_marks) if valid_marks else 0,
-            "max": max(valid_marks) if valid_marks else 0
+            "count": len(valid_marks),
+            "average": round(sum(valid_marks) / len(valid_marks), 2),
+            "min": min(valid_marks),
+            "max": max(valid_marks)
         }
         return jsonify(stats), 200
     except Exception:
